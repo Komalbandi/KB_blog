@@ -2,6 +2,9 @@ package com.komalbandi.kb_blog.entities;
 
 import jakarta.persistence.*;
 
+import java.util.Date;
+import java.util.Set;
+
 @Entity
 @Table(name = "BLOG_POSTS")
 public class BlogPosts {
@@ -67,5 +70,39 @@ public class BlogPosts {
 
     public void setContent_html(String content_html) {
         this.content_html = content_html;
+    }
+
+    @Column(name = "created_at")
+    private Date created_at;
+
+    public Date getCreated_at() {
+        return this.created_at;
+    }
+
+    public void setCreated_at() {
+        this.created_at = new Date();
+    }
+
+    @Column(name = "updated_at")
+    private Date updated_at;
+
+    public Date getUpdated_at() {
+        return this.updated_at;
+    }
+
+    public void setUpdated_at() {
+        this.updated_at = new Date();
+    }
+
+    @ManyToMany(cascade = {CascadeType.ALL})
+    @JoinTable(
+            name = "BLOG_POST_CATEGORIES",
+            joinColumns = {@JoinColumn(name = "POSTS_ID")},
+            inverseForeignKey = @ForeignKey(name = "CATEGORIES_ID")
+    )
+    private Set<BlogCategories> categories;
+
+    public Set<BlogCategories> getCategories() {
+        return categories;
     }
 }
