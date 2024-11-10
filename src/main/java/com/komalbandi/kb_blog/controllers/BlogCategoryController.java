@@ -1,9 +1,7 @@
 package com.komalbandi.kb_blog.controllers;
 
 import com.komalbandi.kb_blog.entities.BlogCategories;
-import com.komalbandi.kb_blog.entities.User;
 import com.komalbandi.kb_blog.repositories.BlogCategoriesRepository;
-import com.komalbandi.kb_blog.repositories.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
