@@ -6,6 +6,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 import jakarta.persistence.Table;
 
+import java.util.Date;
+
 @Entity
 @Table(name = "user")
 public class User {
@@ -39,7 +41,7 @@ public class User {
         this.last_name = last_name;
     }
 
-    @Column(name = "email")
+    @Column(name = "email",unique = true)
     private String email;
 
     public String getEmail() {
@@ -62,24 +64,24 @@ public class User {
     }
 
     @Column(name = "create_at")
-    private String create_at;
+    private Date create_at;
 
-    public String getCreate_at() {
+    public Date getCreate_at() {
         return this.create_at;
     }
 
-    public void setCreate_at(String create_at) {
-        this.create_at = create_at;
+    public void setCreate_at() {
+        this.create_at = new Date();
     }
 
     @Column(name = "updated_at")
-    private String updated_at;
+    private Date updated_at;
 
-    public String getUpdated_at() {
+    public Date getUpdated_at() {
         return this.updated_at;
     }
 
-    public void setUpdated_at(String updated_at) {
-        this.updated_at = updated_at;
+    public void setUpdated_at() {
+        this.updated_at = new Date();
     }
 }

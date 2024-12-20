@@ -3,6 +3,7 @@ package com.komalbandi.kb_blog.controllers;
 import com.komalbandi.kb_blog.entities.User;
 import com.komalbandi.kb_blog.repositories.UserRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -25,6 +26,10 @@ public class UserController {
 
     @PostMapping()
     public User addUser(@RequestBody User user) {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setCreate_at();
+        user.setUpdated_at();
         return this.userRepository.save(user);
     }
 
