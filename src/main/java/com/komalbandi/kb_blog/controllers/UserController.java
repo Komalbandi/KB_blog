@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.ResponseEntity;
 
 import java.util.Optional;
 
@@ -20,21 +21,21 @@ public class UserController {
     }
 
     @GetMapping()
-    public Iterable<User> getUsers() {
-        return this.userRepository.findAll();
+    public ResponseEntity<Iterable<User>> getUsers() {
+        return new ResponseEntity<Iterable<User>>(this.userRepository.findAll(), HttpStatus.OK);
     }
 
     @PostMapping()
-    public User addUser(@RequestBody User user) {
+    public ResponseEntity<User> addUser(@RequestBody User user) {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setCreate_at();
         user.setUpdated_at();
-        return this.userRepository.save(user);
+        return new ResponseEntity<User>(this.userRepository.save(user), HttpStatus.CREATED);
     }
 
     @PutMapping("")
-    public Optional<User> updateUser(@RequestBody User userBody) {
+    public ResponseEntity<Optional<User>> updateUser(@RequestBody User userBody) {
         Optional<User> findUser = this.userRepository.findById(userBody.getId());
         if (findUser.isPresent()) {
             User foundUser = findUser.get();
@@ -55,10 +56,12 @@ public class UserController {
                 foundUser.setPassword(userBody.getPassword());
             }
 
+            foundUser.setUpdated_at();
+
             this.userRepository.save(foundUser);
-            return this.userRepository.findById(userBody.getId());
+            return new ResponseEntity<Optional<User>>(this.userRepository.findById(userBody.getId()), HttpStatus.OK);
         }
-        return Optional.empty();
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
     }
 
     @GetMapping("/test")
@@ -70,11 +73,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public Optional<String> deleteUser(@PathVariable Long id) {
         Optional<User> findUser = this.userRepository.findById(id);
-
-        if(findUser.isPresent()){
-            this.userRepository.delete(findUser.get());
-            return Optional.empty();
-        }
+        findUser.ifPresent(user -> this.userRepository.delete(user));
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
     }
 

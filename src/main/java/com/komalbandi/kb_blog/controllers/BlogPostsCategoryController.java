@@ -19,16 +19,19 @@ public class BlogPostsCategoryController {
         this.blogPostsCategoriesRepository = blogPostsCategoriesRepository;
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping()
     public Iterable<BlogPostsCategories> getBlogPostsCategories() {
         return this.blogPostsCategoriesRepository.findAll();
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping()
     public BlogPostsCategories createBlogPostsCategory(@RequestBody BlogPostsCategories blogPostsCategories) {
         return this.blogPostsCategoriesRepository.save(blogPostsCategories);
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @PutMapping()
     public Optional<BlogPostsCategories> updateBlogPostsCategory(@RequestBody BlogPostsCategories blogPostsCategories) {
         Optional<BlogPostsCategories> findBlogPostsCategory = this.blogPostsCategoriesRepository.findById(blogPostsCategories.getId());
@@ -43,21 +46,25 @@ public class BlogPostsCategoryController {
                 foundBlogPostsCategory.setCategory_id(blogPostsCategories.getCategory_id());
             }
 
+            blogPostsCategories.setUpdated_at();
+
             this.blogPostsCategoriesRepository.save(foundBlogPostsCategory);
             return findBlogPostsCategory;
         }
 
-        return Optional.empty();
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "BlogPostsCategory not found");
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/{id}")
-    public ResponseEntity<BlogPostsCategories> deleteBlogPostsCategory(@PathVariable Long id) {
+    public Optional<BlogPostsCategories> deleteBlogPostsCategory(@PathVariable Long id) {
         Optional<BlogPostsCategories> findBlogPostsCategory = this.blogPostsCategoriesRepository.findById(id);
-        if (findBlogPostsCategory.isPresent()) {
-            this.blogPostsCategoriesRepository.deleteById(id);
-            return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
-        }
-
-        return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        findBlogPostsCategory.ifPresentOrElse(
+                blogPostsCategories -> this.blogPostsCategoriesRepository.deleteById(id),
+                () -> {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "BlogPostsCategory not found");
+                }
+        );
+        return findBlogPostsCategory;
     }
 }

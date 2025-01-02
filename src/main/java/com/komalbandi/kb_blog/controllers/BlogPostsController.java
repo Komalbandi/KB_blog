@@ -10,6 +10,7 @@ import com.komalbandi.kb_blog.repositories.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -24,11 +25,13 @@ public class BlogPostsController {
         this.blogPostsCategoriesRepository = blogPostsCategoriesRepository;
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping()
     public Iterable<BlogPosts> getBlogPosts() {
         return blogPostsRepository.findAll();
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @PostMapping()
     public BlogPosts createBlogPosts(@RequestBody BlogPostsRequestBody blogPosts) {
         BlogPosts blogs = blogPostsRepository.save(blogPosts.blogPosts);
@@ -39,6 +42,7 @@ public class BlogPostsController {
         return blogs;
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @PutMapping()
     public Optional<BlogPosts> updateBlogPosts(@RequestBody BlogPostsRequestBody blogPosts) {
         Optional<BlogPosts> updatedBlogPosts = blogPostsRepository.findById(blogPosts.blogPosts.getId());
@@ -65,14 +69,14 @@ public class BlogPostsController {
                 foundBlogPosts.setContent_html(blogPosts.blogPosts.getContent_html());
             }
 
-            BlogPosts saveBlog=this.blogPostsRepository.save(foundBlogPosts);
+            BlogPosts saveBlog = this.blogPostsRepository.save(foundBlogPosts);
 
             this.updateBlogPostsCategories(blogPosts, saveBlog.getId());
 
             return Optional.of(foundBlogPosts);
         }
 
-        return Optional.empty();
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "BlogPosts not found");
     }
 
     private void updateBlogPostsCategories(BlogPostsRequestBody blogPosts, Long post_id) {
@@ -81,19 +85,21 @@ public class BlogPostsController {
         });
 
         blogPosts.category_ids.forEach(category_id -> {
-            System.out.println(post_id);
             BlogPostsCategories blogBridge = new BlogPostsCategories(post_id, category_id);
             this.blogPostsCategoriesRepository.save(blogBridge);
         });
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> deleteBlogPosts(@PathVariable Long id) {
-        Optional<BlogPosts> blogPosts = blogPostsRepository.findById(id);
+    public String deleteBlogPosts(@PathVariable Long id) {
+        Optional<BlogPosts> blogPosts = this.blogPostsRepository.findById(id);
+        blogPosts.ifPresent(blogPost -> this.blogPostsRepository.delete(blogPost));
+
         if (blogPosts.isPresent()) {
-            blogPostsRepository.delete(blogPosts.get());
-            return new ResponseEntity<>(HttpStatus.OK);
+            return "OK";
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "BlogPosts not found");
         }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 }
