@@ -1,6 +1,7 @@
 package com.komalbandi.kb_blog.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,6 +11,7 @@ import com.komalbandi.kb_blog.repositories.UserRepository;
 import com.komalbandi.kb_blog.entities.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.komalbandi.kb_blog.utils.JsonWebTokenUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -34,7 +36,7 @@ public class AuthenticateController {
                 return this.jsonWebTokenUtils.createJWTToken(user.getEmail());
             }
         }
-        return null;
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Password or email is incorrect");
     }
 
     public boolean tokenIsValid(String token) {
