@@ -7,7 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/blog_category")
@@ -70,5 +73,12 @@ public class BlogCategoryController {
                 }
         );
         return "BlogCategory deleted successfully";
+    }
+
+    @PostMapping("/search/{searchName}")
+    public Iterable<BlogCategories> searchBlogCategory(@PathVariable String searchName) {
+        List<BlogCategories> blogCategories = new ArrayList<BlogCategories>();
+        this.blogCategoriesRepository.findAll().forEach(blogCategories::add);
+        return blogCategories.stream().filter(bc->bc.getName().toLowerCase().contains(searchName.toLowerCase())).collect(Collectors.toList());
     }
 }

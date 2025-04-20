@@ -93,7 +93,6 @@ public class JsonWebTokenUtils {
     }
 
     private SecretKey getSigningKey() {
-        System.out.println(this.jwtSecret);
         byte[] keyBytes = this.jwtSecret.getBytes(StandardCharsets.UTF_16);
         return Keys.hmacShaKeyFor(keyBytes);
     }
