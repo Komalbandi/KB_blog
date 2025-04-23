@@ -1,30 +1,53 @@
 package com.komalbandi.kb_blog.controllers;
 
+import com.komalbandi.kb_blog.constants.BlogCategorySort;
 import com.komalbandi.kb_blog.entities.BlogCategories;
+import com.komalbandi.kb_blog.models.BlogCategoryRequest;
 import com.komalbandi.kb_blog.repositories.BlogCategoriesRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @RestController
 @RequestMapping("/blog_category")
 public class BlogCategoryController {
+    @Autowired
     BlogCategoriesRepository blogCategoriesRepository;
-
-    public BlogCategoryController(BlogCategoriesRepository blogCategoriesRepository) {
-        this.blogCategoriesRepository = blogCategoriesRepository;
-    }
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping()
-    public Iterable<BlogCategories> getBlogCategories() {
-        return this.blogCategoriesRepository.findAll();
+    public List<BlogCategories> getBlogCategories(@RequestBody BlogCategoryRequest blogCategoryRequest) {
+        try {
+            return this.searchBlogCategories(blogCategoryRequest);
+        } catch (ParseException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid date format");
+        }
+    }
+
+    private List<BlogCategories> searchBlogCategories(BlogCategoryRequest blogCategoryRequest) throws ParseException {
+        int offset = blogCategoryRequest.getPage() * blogCategoryRequest.getRowCount();
+        Pageable pageable = PageRequest.of(offset, blogCategoryRequest.getRowCount());
+        switch (blogCategoryRequest.getSearchBy()) {
+            case BlogCategorySort.NAME:
+                return this.blogCategoriesRepository.findAllByNameContaining(blogCategoryRequest.getSearch(), pageable);
+            case BlogCategorySort.SLUG:
+                return this.blogCategoriesRepository.findAllBySlugContaining(blogCategoryRequest.getSearch(), pageable);
+            case BlogCategorySort.CREATED_AT:
+                SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
+                String dateInString = blogCategoryRequest.getSearch();
+                Date createdAt = formatter.parse(dateInString);
+                return this.blogCategoriesRepository.findAllByCreatedAt(createdAt, pageable);
+            default:
+                List<BlogCategories> result = new ArrayList<>();
+                this.blogCategoriesRepository.findAll().forEach(result::add);
+                return result;
+        }
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -73,12 +96,5 @@ public class BlogCategoryController {
                 }
         );
         return "BlogCategory deleted successfully";
-    }
-
-    @PostMapping("/search/{searchName}")
-    public Iterable<BlogCategories> searchBlogCategory(@PathVariable String searchName) {
-        List<BlogCategories> blogCategories = new ArrayList<BlogCategories>();
-        this.blogCategoriesRepository.findAll().forEach(blogCategories::add);
-        return blogCategories.stream().filter(bc->bc.getName().toLowerCase().contains(searchName.toLowerCase())).collect(Collectors.toList());
     }
 }
